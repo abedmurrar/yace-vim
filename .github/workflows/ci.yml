@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo test --locked
+      - name: Install YACE
+        run: curl -fsSL https://abedmurrar.github.io/yace/install.sh | sudo sh
+      - name: Package (validates the manifest)
+        run: scripts/package.sh
+      - name: Install the package
+        run: yace --install-plugin dist/yace-vim-*.tar.gz --yes

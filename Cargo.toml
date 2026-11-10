@@ -1,0 +1,22 @@
+[package]
+name = "yace-vim"
+description = "Vim keys for YACE: Normal, Insert and Visual modes, motions, operators, text objects, counts, registers, dot repeat, macros, search and :w / :q"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT OR Apache-2.0"
+authors = ["Abed Murrar"]
+repository = "https://github.com/abedmurrar/yace-vim"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+yace-plugin = { git = "https://github.com/abedmurrar/yace", tag = "v0.15.0" }
+serde_json = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

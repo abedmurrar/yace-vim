@@ -1,0 +1,23 @@
+id = "io.github.abedmurrar.yace-vim"
+name = "Vim"
+version = "0.1.0"
+description = "Vim keys in YACE: Normal, Insert and Visual modes, motions, operators, text objects, counts, registers, . repeat, macros, / search and :w :q :%s"
+publisher = "Abed Murrar"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/abedmurrar/yace-vim"
+yace = ">=0.15"
+os = ["linux"]
+library = "lib/libyace_vim.so"
+activation = ["onStartupFinished"]
+capabilities = ["documents.read", "documents.write", "keyboard", "editor.selections"]
+
+[[commands]]
+id = "vim.toggle"
+title = "Toggle Vim Keys"
+category = "Vim"
+
+[[status_items]]
+id = "vim.mode"
+alignment = "left"
+priority = 100
+text = "NORMAL"

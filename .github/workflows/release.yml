@@ -1,0 +1,51 @@
+name: Release
+
+# Push a tag vX.Y.Z (matching `version` in yace-plugin.toml) to build the
+# plugin for x86_64 and arm64 Linux and publish both packages and their
+# SHA-256 as a GitHub Release. Built on Ubuntu 22.04 (glibc 2.35), as YACE.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        runner: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the manifest
+        run: |
+          v="$(sed -n 's/^version = "\(.*\)"/\1/p' yace-plugin.toml)"
+          [[ "v$v" == "$GITHUB_REF_NAME" ]] || { echo "tag $GITHUB_REF_NAME, manifest $v"; exit 1; }
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --locked
+      - run: curl -fsSL https://abedmurrar.github.io/yace/install.sh | sudo sh
+      - run: scripts/package.sh
+      - run: yace --install-plugin dist/yace-vim-*.tar.gz --yes
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.runner }}
+          path: dist/*.tar.gz
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum yace-vim-*.tar.gz > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" yace-vim-*.tar.gz SHA256SUMS --repo "$GITHUB_REPOSITORY" \
+            --title "YACE Vim $GITHUB_REF_NAME" \
+            --notes "Install (YACE 0.15+): \`yace --install-plugin io.github.abedmurrar.yace-vim\`, or Extensions: Browse Plugins… in YACE. Packages for x86_64 and arm64 Linux."
